@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Diario de migraña</title>
+  <meta name="theme-color" content="#14161c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Migraña">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/icon-180.png">
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <!-- Pantalla de acceso (solo la primera vez) -->
+  <section id="login" class="screen" hidden>
+    <div class="login-box">
+      <div class="logo">🌙</div>
+      <h1>Diario de migraña</h1>
+      <p class="muted">Escribe el código de acceso que te han dado.</p>
+      <form id="login-form">
+        <input id="login-token" type="password" autocomplete="current-password" placeholder="Código de acceso" required>
+        <button class="btn primary" type="submit">Entrar</button>
+      </form>
+      <p id="login-error" class="error" hidden></p>
+    </div>
+  </section>
+
+  <main id="app" hidden>
+    <!-- HOY -->
+    <section id="tab-hoy" class="tab">
+      <header class="top">
+        <div>
+          <p class="muted small" id="today-label"></p>
+          <h1>¿Qué tal hoy?</h1>
+        </div>
+        <span id="status-pill" class="pill">Pendiente</span>
+      </header>
+
+      <div class="day-switch" role="group" aria-label="Día que registras">
+        <button class="seg active" data-day="today">Hoy</button>
+        <button class="seg" data-day="yesterday">Ayer</button>
+      </div>
+
+      <details class="card questions" id="questions" open>
+        <summary>Qué contar en el audio <span class="muted small">(1–2 min)</span></summary>
+        <ol>
+          <li><b>Dolor:</b> ¿has tenido? Intensidad máxima del 0 al 10, desde y hasta qué hora, dónde y cómo era (late, aprieta, pincha).</li>
+          <li><b>Síntomas:</b> náuseas, molestia con la luz, ruido u olores, aura, mareo, cuello… ¿Notaste algo raro antes de que empezara?</li>
+          <li><b>Medicación:</b> qué tomaste, a qué hora y si te ayudó. ¿Tomaste el preventivo?</li>
+          <li><b>Sueño:</b> a qué hora te acostaste y levantaste y cómo dormiste. ¿Siesta?</li>
+          <li><b>Comida y bebida:</b> ¿saltaste alguna comida? Vasos de agua, cafés, alcohol, algo fuera de lo normal.</li>
+          <li><b>Estrés y ánimo</b> del 0 al 10.</li>
+          <li><b>Regla:</b> ¿la tienes hoy?</li>
+          <li><b>Día:</b> ejercicio, horas de pantalla y algo distinto (viaje, ruido, luces, olores, calor).</li>
+          <li><b>Impacto:</b> ¿has podido hacer vida normal?</li>
+        </ol>
+      </details>
+
+      <div class="recorder">
+        <button id="rec-btn" class="rec" aria-label="Grabar audio">
+          <span class="rec-dot"></span>
+        </button>
+        <p id="rec-label" class="rec-label">Pulsa para grabar</p>
+        <p id="rec-timer" class="rec-timer" hidden>0:00</p>
+      </div>
+
+      <details class="card" id="text-entry">
+        <summary>Prefiero escribirlo</summary>
+        <textarea id="text-input" rows="5" placeholder="Hoy me dolió la cabeza desde las 11, un 6 sobre 10…"></textarea>
+        <button id="text-send" class="btn">Guardar</button>
+      </details>
+
+      <div id="processing" class="card processing" hidden>
+        <div class="spinner"></div>
+        <p id="processing-label">Transcribiendo…</p>
+      </div>
+
+      <div id="error-box" class="card error-card" hidden>
+        <p id="error-text"></p>
+        <button id="retry-btn" class="btn">Reintentar</button>
+      </div>
+
+      <div id="result" hidden></div>
+    </section>
+
+    <!-- HISTORIAL -->
+    <section id="tab-historial" class="tab" hidden>
+      <header class="top"><h1>Historial</h1></header>
+      <div id="history-list"></div>
+    </section>
+
+    <!-- PATRONES -->
+    <section id="tab-patrones" class="tab" hidden>
+      <header class="top"><h1>Patrones</h1></header>
+      <div class="day-switch" role="group" aria-label="Periodo">
+        <button class="seg active" data-range="30">30 días</button>
+        <button class="seg" data-range="90">90 días</button>
+        <button class="seg" data-range="365">Todo</button>
+      </div>
+      <div id="patterns"></div>
+    </section>
+
+    <!-- AJUSTES -->
+    <section id="tab-ajustes" class="tab" hidden>
+      <header class="top"><h1>Ajustes</h1></header>
+
+      <div class="card">
+        <h2>Recordatorios</h2>
+        <p class="muted small">Te avisan a estas horas hasta que grabes el audio del día. Cuando lo grabas, se paran.</p>
+        <div id="times-list"></div>
+        <div class="row">
+          <button id="add-time" class="btn ghost">+ Añadir hora</button>
+          <button id="save-times" class="btn primary">Guardar horas</button>
+        </div>
+        <hr>
+        <div id="push-state" class="small muted"></div>
+        <div class="row">
+          <button id="enable-push" class="btn primary">Activar notificaciones</button>
+          <button id="test-push" class="btn ghost">Probar</button>
+        </div>
+        <div id="install-help" class="hint" hidden>
+          Para recibir avisos en el iPhone primero añade la app a la pantalla de inicio:
+          en Safari pulsa <b>Compartir</b> → <b>Añadir a pantalla de inicio</b>, ábrela desde ese icono y vuelve aquí.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Tiempo atmosférico</h2>
+        <p class="muted small">Con tu ubicación aproximada (≈1 km) se guarda cada día la presión, la temperatura y la humedad, sin que tengas que decir nada.</p>
+        <p id="loc-state" class="small"></p>
+        <button id="set-location" class="btn">Usar mi ubicación</button>
+      </div>
+
+      <div class="card">
+        <h2>Exportar datos</h2>
+        <p class="muted small">Para guardarlos o enseñárselos a tu neuróloga.</p>
+        <div class="row">
+          <button id="export-csv" class="btn">CSV (Excel)</button>
+          <button id="export-json" class="btn ghost">JSON</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Sesión</h2>
+        <p class="muted small" id="tz-label"></p>
+        <button id="logout" class="btn ghost">Cerrar sesión en este móvil</button>
+      </div>
+      <p class="muted small center">Esta app ayuda a llevar un registro; no sustituye la opinión de tu médico.</p>
+    </section>
+
+    <nav class="tabbar">
+      <button data-tab="hoy" class="active"><span>🎙️</span>Hoy</button>
+      <button data-tab="historial"><span>📅</span>Historial</button>
+      <button data-tab="patrones"><span>📈</span>Patrones</button>
+      <button data-tab="ajustes"><span>⚙️</span>Ajustes</button>
+    </nav>
+  </main>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "diario-migrana",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "ai": { "binding": "AI" },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "diario-migrana",
+      // Sustituir por el id que devuelve: npx wrangler d1 create diario-migrana
+      "database_id": "REEMPLAZAR_CON_EL_ID_DE_D1",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Revisa cada 5 minutos si toca un recordatorio
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "observability": { "enabled": true }
+}
